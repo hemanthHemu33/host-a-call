@@ -1,0 +1,7 @@
+{
+  "extends": "@connecto/tsconfig/base.json",
+  "compilerOptions": {
+    "rootDir": "src"
+  },
+  "include": ["src/**/*.ts"]
+}

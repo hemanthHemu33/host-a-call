@@ -1,0 +1,61 @@
+name: Backend DB Smoke
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/backend-db-smoke.yml'
+      - 'backend/apps/api/**'
+      - 'backend/apps/worker/**'
+      - 'backend/packages/api-contracts/**'
+      - 'backend/packages/backend-architecture/**'
+      - 'backend/packages/backend-runtime/**'
+      - 'backend/packages/domain/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+  push:
+    branches:
+      - main
+
+jobs:
+  migrate-seed:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: connecto
+          POSTGRES_PASSWORD: connecto
+          POSTGRES_USER: connecto
+        options: >-
+          --health-cmd "pg_isready -U connecto -d connecto"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - '5432:5432'
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - '6379:6379'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.11.0'
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.7.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Migrate, seed, probe constraints, and capture query plans
+        env:
+          CONNECTO_ENV: test
+          DATABASE_URL: postgres://connecto:connecto@127.0.0.1:5432/connecto
+          REDIS_URL: redis://127.0.0.1:6379/0
+        run: pnpm db:smoke:migrate-seed

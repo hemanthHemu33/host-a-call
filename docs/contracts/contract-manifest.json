@@ -1,0 +1,862 @@
+{
+  "generatedAt": "deterministic",
+  "routeCount": 107,
+  "routes": [
+    {
+      "auth": "user",
+      "id": "accounts.me.status",
+      "method": "GET",
+      "path": "/v1/accounts/me/status",
+      "responseComponent": "AdminQueueItem",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.audit.list",
+      "method": "GET",
+      "path": "/v1/admin/audit-log",
+      "responseComponent": "AdminQueueItemPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.dashboard.get",
+      "method": "GET",
+      "path": "/v1/admin/dashboard",
+      "responseComponent": "AdminDashboard",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.hosts.applications.review",
+      "method": "POST",
+      "path": "/v1/admin/hosts/{hostId}/application-review",
+      "responseComponent": "HostApplication",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.hosts.list",
+      "method": "GET",
+      "path": "/v1/admin/hosts",
+      "responseComponent": "AdminQueueItemPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.media_reviews.decide",
+      "method": "POST",
+      "path": "/v1/admin/media-reviews/{reviewId}/decision",
+      "responseComponent": "MediaReview",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.media_reviews.get",
+      "method": "GET",
+      "path": "/v1/admin/media-reviews/{reviewId}",
+      "responseComponent": "MediaReview",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.media_reviews.list",
+      "method": "GET",
+      "path": "/v1/admin/media-reviews",
+      "responseComponent": "MediaReviewPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.payments.list",
+      "method": "GET",
+      "path": "/v1/admin/payments",
+      "responseComponent": "PaymentPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.payments.reconcile",
+      "method": "POST",
+      "path": "/v1/admin/payments/{paymentId}/reconcile",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.refunds.approve",
+      "method": "POST",
+      "path": "/v1/admin/refunds/{refundId}/approve",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.refunds.list",
+      "method": "GET",
+      "path": "/v1/admin/refunds",
+      "responseComponent": "AdminQueueItemPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.refunds.reject",
+      "method": "POST",
+      "path": "/v1/admin/refunds/{refundId}/reject",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.reports.list",
+      "method": "GET",
+      "path": "/v1/admin/reports",
+      "responseComponent": "ReportPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.reports.resolve",
+      "method": "POST",
+      "path": "/v1/admin/reports/{reportId}/resolution",
+      "responseComponent": "Report",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.settings.feature_flags.patch",
+      "method": "PATCH",
+      "path": "/v1/admin/settings/feature-flags/{flagKey}",
+      "responseComponent": "AppBootstrap",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "admin.settings.get",
+      "method": "GET",
+      "path": "/v1/admin/settings",
+      "responseComponent": "AppBootstrap",
+      "status": "implemented"
+    },
+    {
+      "auth": "public",
+      "id": "analytics.events.create",
+      "method": "POST",
+      "path": "/v1/analytics/events",
+      "responseComponent": "AnalyticsAccepted",
+      "status": "implemented"
+    },
+    {
+      "auth": "public",
+      "id": "app.bootstrap.get",
+      "method": "GET",
+      "path": "/v1/app/bootstrap",
+      "responseComponent": "AppBootstrap",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "auth.age_confirmation",
+      "method": "POST",
+      "path": "/v1/auth/age-confirmation",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "public",
+      "id": "auth.otp.request",
+      "method": "POST",
+      "path": "/v1/auth/otp",
+      "responseComponent": "OtpRequest",
+      "status": "implemented"
+    },
+    {
+      "auth": "public",
+      "id": "auth.otp.verify",
+      "method": "POST",
+      "path": "/v1/auth/otp/verify",
+      "responseComponent": "FrontendSession",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "auth.session.get",
+      "method": "GET",
+      "path": "/v1/auth/session",
+      "responseComponent": "FrontendSession",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "auth.sign_out",
+      "method": "POST",
+      "path": "/v1/auth/sign-out",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.complete",
+      "method": "POST",
+      "path": "/v1/calls/{callId}/complete",
+      "responseComponent": "CompletedCallRecord",
+      "status": "changed"
+    },
+    {
+      "auth": "user",
+      "id": "calls.get",
+      "method": "GET",
+      "path": "/v1/calls/{callId}",
+      "responseComponent": "CompletedCallRecord",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "calls.intents.accept",
+      "method": "POST",
+      "path": "/v1/calls/intents/{intentId}/accept",
+      "responseComponent": "Ok",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "calls.intents.create",
+      "method": "POST",
+      "path": "/v1/calls/intents",
+      "responseComponent": "CallIntent",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.intents.reject",
+      "method": "POST",
+      "path": "/v1/calls/intents/{intentId}/reject",
+      "responseComponent": "Ok",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "calls.intents.release",
+      "method": "POST",
+      "path": "/v1/calls/intents/{intentId}/release",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.intents.ring",
+      "method": "POST",
+      "path": "/v1/calls/intents/{intentId}/ring",
+      "responseComponent": "HostRingResponse",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.list",
+      "method": "GET",
+      "path": "/v1/calls",
+      "responseComponent": "CompletedCallRecordPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.post_call.get",
+      "method": "GET",
+      "path": "/v1/calls/{callId}/post-call",
+      "responseComponent": "CompletedCallRecord",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "calls.rating.create",
+      "method": "POST",
+      "path": "/v1/calls/{callId}/rating",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.sessions.create",
+      "method": "POST",
+      "path": "/v1/calls/sessions",
+      "responseComponent": "ActiveVoiceCallSession",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "calls.sessions.end",
+      "method": "POST",
+      "path": "/v1/calls/sessions/{sessionId}/end",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.sessions.telemetry",
+      "method": "POST",
+      "path": "/v1/calls/sessions/{sessionId}/telemetry",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "calls.sessions.video.activate",
+      "method": "POST",
+      "path": "/v1/calls/sessions/{sessionId}/video/activate",
+      "responseComponent": "ActiveCallSessionPatch",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.sessions.video.connected",
+      "method": "POST",
+      "path": "/v1/calls/sessions/{sessionId}/video/connected",
+      "responseComponent": "ActiveCallSessionPatch",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.sessions.video.voice_fallback",
+      "method": "POST",
+      "path": "/v1/calls/sessions/{sessionId}/video/voice-fallback",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.token.create",
+      "method": "POST",
+      "path": "/v1/calls/token",
+      "responseComponent": "CallToken",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.video_upgrade.cancel",
+      "method": "POST",
+      "path": "/v1/calls/{callId}/video-upgrade/{requestId}/cancel",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.video_upgrade.create",
+      "method": "POST",
+      "path": "/v1/calls/{callId}/video-upgrade",
+      "responseComponent": "ActiveCallVideoUpgrade",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "calls.video_upgrade.get",
+      "method": "GET",
+      "path": "/v1/calls/{callId}/video-upgrade/{requestId}",
+      "responseComponent": "ActiveCallVideoUpgrade",
+      "status": "implemented"
+    },
+    {
+      "auth": "provider",
+      "id": "calls.webhooks.agora",
+      "method": "POST",
+      "path": "/v1/calls/webhooks/agora",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "customers.blocked_hosts.create",
+      "method": "POST",
+      "path": "/v1/customers/{customerId}/blocked-hosts",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.blocked_hosts.delete",
+      "method": "DELETE",
+      "path": "/v1/customers/{customerId}/blocked-hosts/{hostId}",
+      "responseComponent": "Ok",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "customers.blocked_hosts.list",
+      "method": "GET",
+      "path": "/v1/customers/{customerId}/blocked-hosts",
+      "responseComponent": "HostSummaryPage",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "customers.delete_account.get",
+      "method": "GET",
+      "path": "/v1/customers/{customerId}/delete-account",
+      "responseComponent": "AdminQueueItem",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.delete_account.request",
+      "method": "POST",
+      "path": "/v1/customers/{customerId}/delete-account",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.get",
+      "method": "GET",
+      "path": "/v1/customers/{customerId}",
+      "responseComponent": "Customer",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.location.put",
+      "method": "PUT",
+      "path": "/v1/customers/{customerId}/location",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "customers.notification_preferences.get",
+      "method": "GET",
+      "path": "/v1/customers/{customerId}/notification-preferences",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.notification_preferences.put",
+      "method": "PUT",
+      "path": "/v1/customers/{customerId}/notification-preferences",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.onboarding.languages",
+      "method": "PATCH",
+      "path": "/v1/customers/{customerId}/onboarding/languages",
+      "responseComponent": "Customer",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "customers.onboarding.match_tags",
+      "method": "PATCH",
+      "path": "/v1/customers/{customerId}/onboarding/match-tags",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.onboarding.profile",
+      "method": "PATCH",
+      "path": "/v1/customers/{customerId}/onboarding/profile",
+      "responseComponent": "Customer",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "customers.permissions.record",
+      "method": "POST",
+      "path": "/v1/customers/{customerId}/permissions",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "customers.profile.patch",
+      "method": "PATCH",
+      "path": "/v1/customers/{customerId}/profile",
+      "responseComponent": "Customer",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.referrals.detail",
+      "method": "GET",
+      "path": "/v1/customers/{customerId}/referrals/{referralId}",
+      "responseComponent": "Referral",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "customers.referrals.overview",
+      "method": "GET",
+      "path": "/v1/customers/{customerId}/referrals/overview",
+      "responseComponent": "ReferralPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "public",
+      "id": "deep_links.resolve",
+      "method": "POST",
+      "path": "/v1/deep-links/resolve",
+      "responseComponent": "DeepLinkResolveResponse",
+      "status": "changed"
+    },
+    {
+      "auth": "user",
+      "id": "devices.push_tokens.create",
+      "method": "POST",
+      "path": "/v1/devices/push-tokens",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.application.agreement.create",
+      "method": "POST",
+      "path": "/v1/hosts/{hostId}/application/agreement",
+      "responseComponent": "HostApplication",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.application.get",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}/application",
+      "responseComponent": "HostApplication",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.application.identity_verification.create",
+      "method": "POST",
+      "path": "/v1/hosts/{hostId}/application/identity-verification",
+      "responseComponent": "HostApplication",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.application.voice_verification.create",
+      "method": "POST",
+      "path": "/v1/hosts/{hostId}/application/voice-verification",
+      "responseComponent": "HostApplication",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.application.voice_verification.get",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}/application/voice-verification",
+      "responseComponent": "HostApplication",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.availability.patch",
+      "method": "PATCH",
+      "path": "/v1/hosts/{hostId}/availability",
+      "responseComponent": "Host",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.daily_status.get",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}/daily-status",
+      "responseComponent": "HostAudioStatus",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.daily_status.put",
+      "method": "PUT",
+      "path": "/v1/hosts/{hostId}/daily-status",
+      "responseComponent": "HostAudioStatus",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.dashboard.get",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}/dashboard",
+      "responseComponent": "HostDashboard",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.earnings.get",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}/earnings",
+      "responseComponent": "Earnings",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.get",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}",
+      "responseComponent": "Host",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.list",
+      "method": "GET",
+      "path": "/v1/hosts",
+      "responseComponent": "HostSummaryPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.referrals.detail",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}/referrals/{referralId}",
+      "responseComponent": "Referral",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.referrals.overview",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}/referrals/overview",
+      "responseComponent": "ReferralPage",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.self_introduction.get",
+      "method": "GET",
+      "path": "/v1/hosts/{hostId}/self-introduction",
+      "responseComponent": "HostSelfIntroduction",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "hosts.self_introduction.put",
+      "method": "PUT",
+      "path": "/v1/hosts/{hostId}/self-introduction",
+      "responseComponent": "HostSelfIntroduction",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "media.complete",
+      "method": "POST",
+      "path": "/v1/media/{assetId}/complete",
+      "responseComponent": "Ok",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "media.upload_intents.create",
+      "method": "POST",
+      "path": "/v1/media/upload-intents",
+      "responseComponent": "MediaUploadIntent",
+      "status": "implemented"
+    },
+    {
+      "auth": "provider",
+      "id": "media.webhooks.storage",
+      "method": "POST",
+      "path": "/v1/media/webhooks/storage",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "notifications.list",
+      "method": "GET",
+      "path": "/v1/notifications",
+      "responseComponent": "NotificationPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "notifications.read",
+      "method": "POST",
+      "path": "/v1/notifications/{notificationId}/read",
+      "responseComponent": "Notification",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "notifications.read_all",
+      "method": "POST",
+      "path": "/v1/notifications/read-all",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "provider",
+      "id": "notifications.webhooks.fcm",
+      "method": "POST",
+      "path": "/v1/notifications/webhooks/fcm",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "payments.create",
+      "method": "POST",
+      "path": "/v1/payments",
+      "responseComponent": "Payment",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "payments.get",
+      "method": "GET",
+      "path": "/v1/payments/{paymentId}",
+      "responseComponent": "Payment",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "payments.verify",
+      "method": "POST",
+      "path": "/v1/payments/{paymentId}/verify",
+      "responseComponent": "Payment",
+      "status": "implemented"
+    },
+    {
+      "auth": "provider",
+      "id": "payments.webhooks.razorpay",
+      "method": "POST",
+      "path": "/v1/payments/webhooks/razorpay",
+      "responseComponent": "Ok",
+      "status": "missing"
+    },
+    {
+      "auth": "public",
+      "id": "referrals.invitations.resolve",
+      "method": "GET",
+      "path": "/v1/referrals/invitations/resolve",
+      "responseComponent": "Referral",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "referrals.list",
+      "method": "GET",
+      "path": "/v1/referrals",
+      "responseComponent": "ReferralPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "public",
+      "id": "referrals.validate",
+      "method": "POST",
+      "path": "/v1/referrals/validate",
+      "responseComponent": "Referral",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "refunds.create",
+      "method": "POST",
+      "path": "/v1/refunds",
+      "responseComponent": "AdminQueueItem",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "refunds.get",
+      "method": "GET",
+      "path": "/v1/refunds/{refundId}",
+      "responseComponent": "AdminQueueItem",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "reports.create",
+      "method": "POST",
+      "path": "/v1/reports",
+      "responseComponent": "Report",
+      "status": "implemented"
+    },
+    {
+      "auth": "admin",
+      "id": "reports.list",
+      "method": "GET",
+      "path": "/v1/reports",
+      "responseComponent": "ReportPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "support.tickets.create",
+      "method": "POST",
+      "path": "/v1/support/tickets",
+      "responseComponent": "SupportTicket",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "support.tickets.get",
+      "method": "GET",
+      "path": "/v1/support/tickets/{ticketId}",
+      "responseComponent": "SupportTicket",
+      "status": "mocked"
+    },
+    {
+      "auth": "user",
+      "id": "support.tickets.list",
+      "method": "GET",
+      "path": "/v1/support/tickets",
+      "responseComponent": "SupportTicketPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "tags.list",
+      "method": "GET",
+      "path": "/v1/tags",
+      "responseComponent": "TagPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "wallets.get_by_customer",
+      "method": "GET",
+      "path": "/v1/wallets",
+      "responseComponent": "Wallet",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "wallets.transactions.get",
+      "method": "GET",
+      "path": "/v1/wallets/{walletId}/transactions/{transactionId}",
+      "responseComponent": "AdminQueueItem",
+      "status": "missing"
+    },
+    {
+      "auth": "user",
+      "id": "wallets.transactions.list",
+      "method": "GET",
+      "path": "/v1/wallets/{walletId}/transactions",
+      "responseComponent": "TransactionPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "withdrawals.create",
+      "method": "POST",
+      "path": "/v1/withdrawals",
+      "responseComponent": "Withdrawal",
+      "status": "implemented"
+    },
+    {
+      "auth": "user",
+      "id": "withdrawals.list",
+      "method": "GET",
+      "path": "/v1/withdrawals",
+      "responseComponent": "WithdrawalPage",
+      "status": "implemented"
+    },
+    {
+      "auth": "provider",
+      "id": "withdrawals.webhooks.payouts",
+      "method": "POST",
+      "path": "/v1/withdrawals/webhooks/payouts",
+      "responseComponent": "Ok",
+      "status": "missing"
+    }
+  ]
+}

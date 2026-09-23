@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreFiles": [
+    "apps/mobile/babel.config.js",
+    "apps/mobile/src/theme/*.ts",
+    "docs/contracts/v1-client.ts",
+    "scripts/metro-ipv4-proxy.mjs"
+  ],
+  "ignoreDependencies": [
+    "@connecto/tsconfig",
+    "babel-preset-expo",
+    "expo-doctor"
+  ],
+  "ignoreIssues": {
+    "backend/apps/api/src/modules/v1/domain-store.ts": ["types"],
+    "backend/apps/api/src/modules/v1/router.ts": ["exports"],
+    "apps/mobile/app.config.ts": ["unlisted"],
+    "apps/mobile/src/**": ["exports", "files", "types"],
+    "backend/packages/api-contracts/src/dtos.ts": ["exports", "types"],
+    "backend/packages/api-contracts/src/routes.ts": ["types"],
+    "backend/packages/backend-architecture/src/environment.ts": ["types"],
+    "backend/packages/backend-runtime/src/health.ts": ["types"],
+    "backend/packages/backend-runtime/src/migrations.ts": ["exports", "types"],
+    "backend/packages/backend-runtime/src/postgres.ts": ["exports"],
+    "backend/packages/backend-runtime/src/redis.ts": ["exports"]
+  }
+}

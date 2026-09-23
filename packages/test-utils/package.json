@@ -1,0 +1,24 @@
+{
+  "name": "@connecto/test-utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "node -e \"require('fs').rmSync('tsconfig.tsbuildinfo',{force:true})\"",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "devDependencies": {
+    "@connecto/tsconfig": "workspace:*",
+    "@types/node": "26.1.1",
+    "vitest": "4.1.10"
+  }
+}

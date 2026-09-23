@@ -1,0 +1,11 @@
+{
+  "name": "@connecto/tsconfig",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./base.json": "./base.json",
+    "./expo.json": "./expo.json",
+    "./next.json": "./next.json",
+    "./node.json": "./node.json"
+  }
+}

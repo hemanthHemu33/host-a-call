@@ -1,0 +1,7 @@
+apps/admin/next-env.d.ts
+apps/mobile/expo-env.d.ts
+apps/mobile/dist/
+apps/admin/.next/
+*.tsbuildinfo
+Dockerfile
+**/Dockerfile
