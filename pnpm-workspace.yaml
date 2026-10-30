@@ -1,11 +1,11 @@
 packages:
   - apps/*
-  - backend/apps/*
-  - backend/packages/*
   - packages/*
 allowBuilds:
+  '@firebase/util': true
   '@shopify/react-native-skia': true
   msw: true
+  protobufjs: true
   sharp: true
   unrs-resolver: true
 overrides:

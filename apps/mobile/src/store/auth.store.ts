@@ -6,6 +6,7 @@ import { languageSchema, type Language, type Role } from '@connecto/domain';
 export type MobileAuthRole = Exclude<Role, 'admin'>;
 export type AgeGateStatus = 'confirmed' | 'underage-blocked' | 'unknown';
 export type AuthAccountStatus = 'active' | 'blocked' | 'suspended';
+export type HostKycStatus = 'not-started' | 'pending' | 'verified';
 export type CustomerRouteTarget = 'home' | 'onboarding';
 export type CustomerPermissionStatus = 'granted' | 'not-now' | 'unknown';
 export type CustomerOnboardingStep =
@@ -73,6 +74,7 @@ export type AuthStoreSnapshot = {
   ageGateStatus: AgeGateStatus;
   customerOnboarding: CustomerOnboardingDraft;
   customerRouteTarget: CustomerRouteTarget | null;
+  hostKycStatus: HostKycStatus | null;
   phoneNumber: string | null;
   role: MobileAuthRole | null;
   sessionId: string | null;
@@ -80,6 +82,7 @@ export type AuthStoreSnapshot = {
 
 export type AuthSessionInput = {
   customerRouteTarget?: CustomerRouteTarget | null;
+  hostKycStatus?: HostKycStatus | null;
   phoneNumber: string;
   role: MobileAuthRole;
   sessionId: string;
@@ -96,6 +99,7 @@ const ageGateStatusSchema = z.enum([
   'unknown',
 ]);
 const authAccountStatusSchema = z.enum(['active', 'blocked', 'suspended']);
+const hostKycStatusSchema = z.enum(['not-started', 'pending', 'verified']);
 const customerRouteTargetSchema = z.enum(['home', 'onboarding']);
 const customerPermissionStatusSchema = z.enum([
   'granted',
@@ -208,6 +212,7 @@ export const authStoreSnapshotSchema = z.object({
     initialCustomerOnboardingDraft,
   ),
   customerRouteTarget: customerRouteTargetSchema.nullable(),
+  hostKycStatus: hostKycStatusSchema.nullable().default(null),
   phoneNumber: z.string().min(1).nullable(),
   role: mobileAuthRoleSchema.nullable(),
   sessionId: z.string().min(1).nullable(),
@@ -218,6 +223,7 @@ export const initialAuthStore: AuthStoreSnapshot = {
   ageGateStatus: 'unknown',
   customerOnboarding: { ...initialCustomerOnboardingDraft },
   customerRouteTarget: null,
+  hostKycStatus: null,
   phoneNumber: null,
   role: null,
   sessionId: null,
@@ -266,6 +272,7 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
       accountStatus: null,
       customerOnboarding: { ...initialCustomerOnboardingDraft },
       customerRouteTarget: null,
+      hostKycStatus: null,
       phoneNumber: null,
       role: null,
       sessionId: null,
@@ -319,6 +326,7 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
       accountStatus: status,
       customerOnboarding: { ...initialCustomerOnboardingDraft },
       customerRouteTarget: null,
+      hostKycStatus: null,
       phoneNumber: trimRequired(phoneNumber, 'Phone number'),
       role: null,
       sessionId: null,
@@ -340,7 +348,13 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
     }));
     return getAuthSnapshot();
   },
-  setSession: ({ customerRouteTarget, phoneNumber, role, sessionId }) => {
+  setSession: ({
+    customerRouteTarget,
+    hostKycStatus,
+    phoneNumber,
+    role,
+    sessionId,
+  }) => {
     set((state) => ({
       ...state,
       accountStatus: 'active',
@@ -356,6 +370,7 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
           : { ...initialCustomerOnboardingDraft },
       customerRouteTarget:
         role === 'customer' ? (customerRouteTarget ?? 'home') : null,
+      hostKycStatus: role === 'host' ? (hostKycStatus ?? 'not-started') : null,
       phoneNumber: trimRequired(phoneNumber, 'Phone number'),
       role,
       sessionId: trimRequired(sessionId, 'Auth session id'),
@@ -370,6 +385,7 @@ export const getAuthSnapshot = (): AuthStoreSnapshot => ({
   ageGateStatus: useAuthStore.getState().ageGateStatus,
   customerOnboarding: useAuthStore.getState().customerOnboarding,
   customerRouteTarget: useAuthStore.getState().customerRouteTarget,
+  hostKycStatus: useAuthStore.getState().hostKycStatus,
   phoneNumber: useAuthStore.getState().phoneNumber,
   role: useAuthStore.getState().role,
   sessionId: useAuthStore.getState().sessionId,

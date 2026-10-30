@@ -1,5 +1,9 @@
 # Frontend Backend Contract Map
 
+> **Retired for runtime integration.** This map documents the abandoned
+> PostgreSQL `/v1` API. Do not implement against it; use Samvad and its
+> [canonical API source](./api-source-of-truth.md).
+
 Date: 2026-08-21
 
 This map is the backend integration contract discovered from the current

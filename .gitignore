@@ -24,3 +24,8 @@ RKStorage-current*
 !.env.example
 apps/mobile/android/
 apps/mobile/ios/
+apps/mobile/google-services.json
+apps/mobile/GoogleService-Info.plist
+apps/mobile/.samvad-export/
+output/pdf/
+tmp/

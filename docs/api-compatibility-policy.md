@@ -1,5 +1,9 @@
 # API Compatibility Policy
 
+> **Retired policy.** This policy applies only to the abandoned root
+> PostgreSQL `/v1` contract. Samvad's controllers and generated Swagger are the
+> current compatibility authority; see [API source of truth](./api-source-of-truth.md).
+
 Date: 2026-08-21
 
 This policy governs Host a Call REST, WebSocket, provider webhook, and

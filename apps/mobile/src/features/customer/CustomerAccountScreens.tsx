@@ -78,6 +78,10 @@ import {
 } from '@/features/customer-onboarding/customer-onboarding.models';
 import { mobileDataIds, useWalletQuery } from '@/features/data/mobileDataHooks';
 import { persistAuthSnapshot } from '@/features/auth/auth.storage';
+import {
+  isSamvadAuthEnabled,
+  logoutCurrentSamvadSession,
+} from '@/features/auth/auth.adapters';
 import { getAuthSnapshot } from '@/store/auth.store';
 import { frontendServices } from '@/services/adapters';
 
@@ -817,7 +821,17 @@ export function CustomerSettingsScreen({
   const { motionPreference } = useMotion();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const signOutMutation = useMutation({
-    mutationFn: () => frontendServices.auth.signOut(),
+    mutationFn: async () => {
+      if (!isSamvadAuthEnabled) {
+        return frontendServices.auth.signOut();
+      }
+
+      try {
+        await logoutCurrentSamvadSession();
+      } catch {
+        // Local credentials are cleared even if the server cannot be reached.
+      }
+    },
     onSuccess: async () => {
       const route = clearNavigationSession();
       await persistAuthSnapshot(getAuthSnapshot());

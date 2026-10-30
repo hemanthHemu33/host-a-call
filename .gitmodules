@@ -1,0 +1,8 @@
+[submodule "backend/samvad-api"]
+	path = backend/samvad-api
+	url = https://github.com/hemanthHemu33/samvad-api.git
+	branch = master
+[submodule "apps/admin/samvad-admin"]
+	path = apps/admin/samvad-admin
+	url = https://github.com/hemanthHemu33/samvad-admin.git
+	branch = master

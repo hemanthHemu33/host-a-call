@@ -41,11 +41,17 @@ import {
 } from '@/navigation/navigation-store';
 import { appRoutes } from '@/navigation/routes';
 import { useHaptics, useReducedMotionEnabled } from '@/motion/MotionProvider';
-import { getAuthSnapshot } from '@/store/auth.store';
+import {
+  getAuthSnapshot,
+  hydrateAuthStore,
+  resetAuthStore,
+} from '@/store/auth.store';
 
 import {
   buildPhoneNumberFromDraft,
   customerAuthAdapter,
+  isSamvadAuthEnabled,
+  restoreSamvadAuthSession,
 } from './auth.adapters';
 import { useAuthFlowStore } from './auth-flow.store';
 import {
@@ -60,6 +66,7 @@ import {
   loadPersistedAuthSnapshot,
   persistAuthSnapshot,
 } from './auth.storage';
+import { clearSamvadTokens, saveSamvadTokens } from './samvad-session.storage';
 import { requestGooglePhoneNumberHint } from './phone-number-hint';
 
 const authRuntimeConfig = parseAuthRuntimeConfig(process.env);
@@ -408,7 +415,25 @@ export function BootstrapScreen() {
 
   const performBootstrap = useCallback(() => {
     loadPersistedAuthSnapshot()
-      .then((snapshot) => {
+      .then(async (persistedSnapshot) => {
+        let snapshot = persistedSnapshot;
+
+        if (
+          isSamvadAuthEnabled &&
+          persistedSnapshot.accountStatus === 'active' &&
+          persistedSnapshot.sessionId !== null
+        ) {
+          const restored = await restoreSamvadAuthSession(persistedSnapshot);
+
+          if (restored === null) {
+            snapshot = resetAuthStore();
+            await clearPersistedAuthSnapshot();
+          } else {
+            snapshot = hydrateAuthStore(restored);
+            await persistAuthSnapshot(snapshot);
+          }
+        }
+
         const route = authRuntimeConfig.mandatoryUpdateRequired
           ? '/mandatory-update'
           : routeFromSnapshot(snapshot);
@@ -539,7 +564,7 @@ function AccountStatusScreen({
               status === 'underage'
                 ? '/(auth)/login'
                 : clearNavigationSession();
-            clearPersistedAuthSnapshot()
+            Promise.all([clearPersistedAuthSnapshot(), clearSamvadTokens()])
               .then(() => {
                 router.replace(route);
               })
@@ -1198,11 +1223,15 @@ export function OtpVerificationScreen() {
 
       const route = completeAuthSession({
         customerRouteTarget: result.customerRouteTarget,
+        hostKycStatus: result.hostKycStatus,
         phoneNumber: result.phoneNumber,
         role: result.role,
         sessionId: result.sessionId,
       });
       haptics.success();
+      if (result.tokens !== undefined) {
+        await saveSamvadTokens(result.tokens);
+      }
       await persistAuthSnapshot(getAuthSnapshot());
       authNavigationInFlight.current = true;
       resetFlow();
@@ -1283,7 +1312,10 @@ export function OtpVerificationScreen() {
           keyboardVisible ? styles.otpFormBodyKeyboard : null,
         ]}
       >
-        We sent a code to {phoneNumber}. Mock fixtures expect `246810`.
+        We sent a code to {phoneNumber}.{' '}
+        {isSamvadAuthEnabled
+          ? 'Enter the code from Firebase to continue.'
+          : 'Mock fixtures expect `246810`.'}
       </Text>
       <Animated.View style={shakeStyle}>
         <View

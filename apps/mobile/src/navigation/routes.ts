@@ -59,6 +59,7 @@ export type AppRouteId =
   | 'hostOnboardingProfile'
   | 'hostOnboardingPhoto'
   | 'hostOnboardingRules'
+  | 'hostOnboardingKyc'
   | 'hostOnboardingVerification'
   | 'hostOnboardingPayout'
   | 'hostOnboardingAgreement'
@@ -582,6 +583,14 @@ export const appRoutes = {
     id: 'hostOnboardingAgreement',
     path: '/(host-onboarding)/agreement',
     title: 'Host agreement',
+  },
+  hostOnboardingKyc: {
+    access: hostAccess,
+    allowLoggedOutDeepLink: false,
+    backPolicy: 'root',
+    id: 'hostOnboardingKyc',
+    path: '/(host-onboarding)/kyc',
+    title: 'Identity verification',
   },
   hostOnboardingApplicationStates: {
     access: hostAccess,

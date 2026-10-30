@@ -1,6 +1,6 @@
 # ADR-002: PostgreSQL Source Of Truth
 
-Status: Accepted
+Status: Superseded by [ADR-009](./ADR-009-samvad-mongodb-api-source-of-truth.md)
 Date: 2026-08-18
 
 ## Context

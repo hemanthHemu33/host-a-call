@@ -1,5 +1,9 @@
 # Backend Audit
 
+> **Historical audit.** This audit covered the retired PostgreSQL `/v1`
+> proposal. It is not an implementation guide for Samvad; use
+> [API source of truth](./api-source-of-truth.md).
+
 Date: 2026-08-21
 
 Audit stage: Prompt 01, repository audit and frontend contract map.

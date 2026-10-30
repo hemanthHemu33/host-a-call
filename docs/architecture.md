@@ -1,5 +1,40 @@
 # Platform Architecture
 
+## Current architecture
+
+Samvad is the only product backend. The prior PostgreSQL `/v1` service and
+the prior Next.js admin console are retired and are not runtime dependencies.
+
+```text
+apps/
+  mobile/                 Expo mobile client; live routes use Samvad APIs
+  admin/samvad-admin/     Independent Vite admin project (its own repository)
+backend/
+  samvad-api/             NestJS + MongoDB canonical API
+packages/
+  design-tokens/          Mobile design tokens
+  eslint-config/
+  test-utils/
+  tsconfig/
+```
+
+The mobile app owns its API request/response types in `apps/mobile/src/samvad`.
+It must not import the removed `@connecto/domain` package. The active mobile
+route root is `src/samvad-app`, beginning with Firebase phone verification,
+Samvad token exchange, caller/host registration, and DigiLocker status.
+Legacy fixture screens remain outside the active route tree until their Samvad
+feature integrations are implemented.
+
+The new admin is intentionally not a pnpm workspace package: it has its own
+Git repository and dependency lockfile. Root `dev:admin` and `build:admin`
+scripts delegate to it through `npm --prefix apps/admin/samvad-admin`.
+
+## Historical architecture
+
+The remainder of this document describes the retired Connecto PostgreSQL
+`/v1` backend. It is retained only as historical reference; see
+[API source of truth](./api-source-of-truth.md) for the active API decision.
+
 Date: 2026-08-19
 
 Connecto v1 runs as a modular monolith with one deployable API, one deployable

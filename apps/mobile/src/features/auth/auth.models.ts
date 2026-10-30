@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
-import type { MobileAuthRole } from '@/store/auth.store';
+import type { HostKycStatus, MobileAuthRole } from '@/store/auth.store';
+
+import type { SamvadTokens } from './samvad-auth.api';
 
 export const phoneCountrySchema = z.object({
   dialCode: z.string().regex(/^\+\d+$/),
@@ -63,10 +65,12 @@ export type OtpVerificationResult =
     }
   | {
       customerRouteTarget: CustomerRouteTarget;
+      hostKycStatus?: HostKycStatus | null;
       kind: 'success';
       phoneNumber: string;
-      role: Extract<MobileAuthRole, 'customer'>;
+      role: MobileAuthRole;
       sessionId: string;
+      tokens?: SamvadTokens;
     }
   | {
       attemptsRemaining: number;

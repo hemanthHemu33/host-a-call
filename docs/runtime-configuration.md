@@ -1,5 +1,9 @@
 # Runtime Configuration
 
+> **Historical Connecto configuration.** The backend variables and `/v1`
+> integration details below are retired. Samvad configuration is owned by
+> `backend/samvad-api`; see [API source of truth](./api-source-of-truth.md).
+
 Connecto validates frontend runtime configuration with Zod through `@connecto/domain`.
 
 ## Profiles

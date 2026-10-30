@@ -131,6 +131,10 @@ const defaultRouteForAuth = (auth: AuthStoreSnapshot): AppRoutePath => {
     return customerTargetRoute(auth.customerRouteTarget, auth);
   }
 
+  if (auth.hostKycStatus !== 'verified') {
+    return appRoutes.hostOnboardingKyc.path;
+  }
+
   return roleHome[auth.role];
 };
 

@@ -1,5 +1,9 @@
 # Mobile API and Backend Requirements
 
+> **Historical requirements.** The paths in this document target the retired
+> PostgreSQL `/v1` service. Mobile integration must be redesigned against the
+> Samvad API described in [API source of truth](./api-source-of-truth.md).
+
 Date: 2026-08-06
 
 This document translates the current mobile frontend into a complete backend

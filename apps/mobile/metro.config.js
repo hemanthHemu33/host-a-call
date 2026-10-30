@@ -1,6 +1,5 @@
 const path = require('node:path');
 const { getDefaultConfig } = require('expo/metro-config');
-const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
@@ -27,21 +26,15 @@ config.transformer.getTransformOptions = async (...args) => {
   };
 };
 
-const nativeWindTypePath =
-  path.relative(process.cwd(), path.join(__dirname, 'nativewind-env.d.ts')) ||
-  'nativewind-env.d.ts';
-
 for (const extension of ['lottie', 'riv']) {
   if (!config.resolver.assetExts.includes(extension)) {
     config.resolver.assetExts.push(extension);
   }
 }
 
+// The active Samvad route tree uses native styles. The previous NativeWind
+// setup remains with the archived fixture UI and is not part of this bundle.
 /** @type {ReturnType<typeof getDefaultConfig>} */
-const metroConfig = withNativeWind(config, {
-  configPath: path.join(__dirname, 'tailwind.config.ts'),
-  input: path.join(__dirname, 'global.css'),
-  typescriptEnvPath: nativeWindTypePath,
-});
+const metroConfig = config;
 
 module.exports = metroConfig;

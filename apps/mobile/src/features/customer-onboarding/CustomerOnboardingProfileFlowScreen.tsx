@@ -25,6 +25,7 @@ import { KeyboardScreen, Screen } from '@/components/layout';
 import { GlassSurface } from '@/components/ui/surfaces';
 import { ui } from '@/components/ui/theme';
 import { appRoutes } from '@/navigation/routes';
+import { completeAuthSession } from '@/navigation/navigation-store';
 import { useHaptics } from '@/motion/MotionProvider';
 import {
   getAuthSnapshot,
@@ -35,6 +36,10 @@ import {
 } from '@/store/auth.store';
 
 import { persistAuthSnapshot } from '../auth/auth.storage';
+import {
+  isSamvadAuthEnabled,
+  registerSamvadAccount,
+} from '../auth/auth.adapters';
 
 import { customerOnboardingAdapter } from './customer-onboarding.adapters';
 
@@ -330,6 +335,11 @@ export function CustomerOnboardingProfileFlowScreen() {
       return;
     }
 
+    if (gender !== 'man' && gender !== 'woman') {
+      setError('Choose Male or Female to continue with Samvad registration.');
+      return;
+    }
+
     const profileImage: CustomerOnboardingImageDraft = {
       cropLabel: selectedAvatar.label,
       localUri: selectedAvatar.uri,
@@ -344,6 +354,29 @@ export function CustomerOnboardingProfileFlowScreen() {
       const normalizedName = displayName.trim();
 
       setSaving(true);
+
+      if (isSamvadAuthEnabled) {
+        const registration = await registerSamvadAccount({
+          displayName: normalizedName,
+          gender,
+        });
+        const route = completeAuthSession({
+          customerRouteTarget: 'onboarding',
+          hostKycStatus: registration.hostKycStatus,
+          phoneNumber: registration.phoneNumber,
+          role: registration.role,
+          sessionId: registration.sessionId,
+        });
+
+        await persistAuthSnapshot(getAuthSnapshot());
+        router.replace(
+          registration.role === 'host'
+            ? appRoutes.hostOnboardingKyc.path
+            : route,
+        );
+        return;
+      }
+
       await persistDraft({
         currentStep: 'language',
         dateOfBirthInput,

@@ -8,6 +8,28 @@ import {
 
 import { mockAuthFixtures, mockReferralFixtures } from './auth.fixtures';
 import {
+  clearFirebasePhoneSession,
+  confirmFirebasePhoneOtp,
+  requestFirebasePhoneOtp,
+} from './firebase-phone-auth';
+import {
+  getSamvadKycStatus,
+  getSamvadProfile,
+  isSamvadUnauthorized,
+  logoutSamvadSession,
+  refreshSamvadTokens,
+  registerSamvadCaller,
+  registerSamvadHost,
+  verifyFirebasePhoneIdentity,
+  type SamvadAuthResponse,
+  type SamvadKycStatus,
+} from './samvad-auth.api';
+import {
+  clearSamvadTokens,
+  loadSamvadTokens,
+  saveSamvadTokens,
+} from './samvad-session.storage';
+import {
   authMockFixtureSchema,
   formatE164PhoneNumber,
   otpResendCooldownSeconds,
@@ -19,6 +41,7 @@ import {
   type ReferralValidationResult,
   type ReferralValidationOutcome,
 } from './auth.models';
+import type { AuthStoreSnapshot, HostKycStatus, MobileAuthRole } from '@/store/auth.store';
 
 const authRuntimeConfig = parseAuthRuntimeConfig(process.env);
 
@@ -145,6 +168,189 @@ const mapReferralValidationContract = (
   outcome: validation.outcome,
 });
 
+export const isSamvadAuthEnabled =
+  mobileRuntimeConfig.providerMode !== 'mock';
+
+const toMobileRole = (role: SamvadAuthResponse['user']['role']): MobileAuthRole =>
+  role === 'HOST' ? 'host' : 'customer';
+
+const toHostKycStatus = (input: {
+  isDigilockerVerified: boolean;
+  kycStatus: string;
+}): HostKycStatus => {
+  if (input.isDigilockerVerified) {
+    return 'verified';
+  }
+
+  return input.kycStatus === 'KYC_PENDING' ? 'pending' : 'not-started';
+};
+
+const readHostKycStatus = async (
+  accessToken: string,
+): Promise<HostKycStatus> => {
+  const status = await getSamvadKycStatus(accessToken);
+  return toHostKycStatus(status);
+};
+
+const samvadResultFromAuthResponse = async (
+  response: SamvadAuthResponse,
+): Promise<Extract<OtpVerificationResult, { kind: 'success' }>> => {
+  const role = toMobileRole(response.user.role);
+  const hostKycStatus =
+    role === 'host'
+      ? await readHostKycStatus(response.tokens.accessToken)
+      : null;
+
+  return {
+    customerRouteTarget:
+      response.user.isProfileComplete === true ? 'home' : 'onboarding',
+    hostKycStatus,
+    kind: 'success',
+    phoneNumber: response.user.phoneNumber,
+    role,
+    sessionId: response.user.id,
+    tokens: response.tokens,
+  };
+};
+
+const samvadRegistrationResult = async (response: SamvadAuthResponse) => {
+  const role = toMobileRole(response.user.role);
+  const hostKycStatus =
+    role === 'host'
+      ? await readHostKycStatus(response.tokens.accessToken)
+      : null;
+
+  return {
+    customerRouteTarget: 'home' as const,
+    hostKycStatus,
+    phoneNumber: response.user.phoneNumber,
+    role,
+    sessionId: response.user.id,
+    tokens: response.tokens,
+  };
+};
+
+const createSamvadCustomerAuthAdapter = (): CustomerAuthAdapter => ({
+  requestOtp: async ({ phoneNumber }) => {
+    const result = await requestFirebasePhoneOtp(phoneNumber);
+
+    return {
+      requestId: result.requestId,
+      resendAfterSeconds: otpResendCooldownSeconds,
+    };
+  },
+  validateReferralCode: async ({ code }) => ({
+    code: code.trim().toUpperCase(),
+    message:
+      'This code will be checked when a host profile is registered. Samvad does not expose referral validation before registration.',
+    outcome: 'pending-qualification',
+  }),
+  verifyOtp: async ({ code, phoneNumber }) => {
+    const idToken = await confirmFirebasePhoneOtp(code);
+    const response = await verifyFirebasePhoneIdentity({ idToken, phoneNumber });
+    return samvadResultFromAuthResponse(response);
+  },
+});
+
+export const registerSamvadAccount = async (input: {
+  displayName: string;
+  gender: 'man' | 'woman';
+  matchTags?: string[];
+  preferredLanguages?: string[];
+  referralCode?: string | null;
+}) => {
+  const tokens = await loadSamvadTokens();
+
+  if (tokens === null) {
+    throw new Error('Your sign-in session expired. Please sign in again.');
+  }
+
+  const response =
+    input.gender === 'woman'
+      ? await registerSamvadHost(tokens.accessToken, {
+          categories: input.matchTags ?? ['Casual Conversation'],
+          displayName: input.displayName.trim(),
+          languages: input.preferredLanguages ?? ['English', 'Hindi'],
+          referralCode: input.referralCode,
+        })
+      : await registerSamvadCaller(tokens.accessToken, {
+          conversationIntents: input.matchTags ?? ['Casual Conversation'],
+          displayName: input.displayName.trim(),
+          preferredLanguages: input.preferredLanguages ?? ['English', 'Hindi'],
+        });
+
+  await saveSamvadTokens(response.tokens);
+  return samvadRegistrationResult(response);
+};
+
+export const restoreSamvadAuthSession = async (
+  snapshot: AuthStoreSnapshot,
+): Promise<AuthStoreSnapshot | null> => {
+  let tokens = await loadSamvadTokens();
+
+  if (tokens === null) {
+    return null;
+  }
+
+  let profile;
+
+  try {
+    profile = await getSamvadProfile(tokens.accessToken);
+  } catch (error: unknown) {
+    if (!isSamvadUnauthorized(error)) {
+      throw error;
+    }
+
+    try {
+      tokens = await refreshSamvadTokens(tokens.refreshToken);
+      await saveSamvadTokens(tokens);
+      profile = await getSamvadProfile(tokens.accessToken);
+    } catch (refreshError: unknown) {
+      if (isSamvadUnauthorized(refreshError)) {
+        await clearSamvadTokens();
+        return null;
+      }
+
+      throw refreshError;
+    }
+  }
+
+  const role = toMobileRole(profile.user.role);
+  const hostKycStatus =
+    role === 'host'
+      ? await readHostKycStatus(tokens.accessToken)
+      : null;
+
+  return {
+    ...snapshot,
+    accountStatus: 'active',
+    ageGateStatus: 'confirmed',
+    customerRouteTarget:
+      role === 'customer'
+        ? profile.user.isProfileComplete
+          ? 'home'
+          : 'onboarding'
+        : null,
+    hostKycStatus,
+    phoneNumber: profile.user.phoneNumber,
+    role,
+    sessionId: profile.user.id,
+  };
+};
+
+export const logoutCurrentSamvadSession = async () => {
+  const tokens = await loadSamvadTokens();
+
+  try {
+    if (tokens !== null) {
+      await logoutSamvadSession(tokens.accessToken);
+    }
+  } finally {
+    await clearSamvadTokens();
+    await clearFirebasePhoneSession();
+  }
+};
+
 export const createMockCustomerAuthAdapter = (): CustomerAuthAdapter => ({
   requestOtp: ({ phoneNumber }) =>
     Promise.resolve({
@@ -197,7 +403,7 @@ export const createUnavailableCustomerAuthAdapter =
 export const customerAuthAdapter =
   mobileRuntimeConfig.providerMode === 'mock'
     ? createMockCustomerAuthAdapter()
-    : createContractBackedCustomerAuthAdapter();
+    : createSamvadCustomerAuthAdapter();
 
 export const buildPhoneNumberFromDraft = (
   country: PhoneCountry,

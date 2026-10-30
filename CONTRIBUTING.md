@@ -46,18 +46,18 @@ pnpm doctor:expo
 
 Mobile:
 
-1. Add the route under `apps/mobile/src/app`.
-2. Put screen-specific implementation under `apps/mobile/src/features/<feature>`.
-3. Import shared contracts from `@connecto/domain` and tokens from `@connecto/design-tokens`.
-4. Add loading, empty, success, recoverable error, and offline states for async screens.
+1. Add active API-backed routes under `apps/mobile/src/samvad-app`.
+2. Keep Samvad request/response types and transport code in `apps/mobile/src/samvad`.
+3. Do not add imports from the removed `@connecto/domain` package.
+4. Add loading, success, and recoverable error states for async screens.
 5. Use safe-area and keyboard-aware layout where relevant.
-6. Add tests for state and provider behaviour.
+6. Add focused tests for new API client behavior.
 
 Admin:
 
-1. Add the route under `apps/admin/src/app`.
-2. Keep admin UI local to the admin app unless the abstraction is platform-neutral.
-3. Use `@connecto/domain` for contracts and `@connecto/design-tokens` for semantic values.
+1. Work in `apps/admin/samvad-admin`, its independent Vite project.
+2. Keep admin UI and Samvad API contracts local to that project.
+3. Do not depend on retired Connecto workspace packages.
 4. Add tests for data-state handling and critical actions.
 
 ## Adding A Route
@@ -76,8 +76,8 @@ Use platform-native motion in the app surface where the animation lives. Share t
 
 No real backend services should be created in frontend stages.
 
-1. Add or extend a typed interface in `backend/packages/domain`.
-2. Validate payloads with Zod before data crosses package boundaries.
-3. Add deterministic fixtures in `backend/packages/domain`.
-4. Select the provider through `CONNECTO_PROVIDER`, `NEXT_PUBLIC_CONNECTO_PROVIDER`, or `EXPO_PUBLIC_CONNECTO_PROVIDER`.
-5. Add unit tests for mock adapter success and failure states.
+1. Add or extend the Samvad NestJS API contract in `backend/samvad-api`.
+2. Validate payloads at the API boundary.
+3. Add deterministic backend tests for new behavior.
+4. Point mobile/admin development at the intended Samvad API base URL.
+5. Add client tests for success and failure states.

@@ -29,7 +29,12 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: [
+      'src/samvad/**/*.test.ts',
+      'src/samvad/**/*.test.tsx',
+      'test/samvad/**/*.test.ts',
+      'test/samvad/**/*.test.tsx',
+    ],
     server: {
       deps: {
         inline: ['@testing-library/react-native'],

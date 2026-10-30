@@ -1,5 +1,9 @@
 # UI Backend Traceability
 
+> **Historical traceability map.** Its `/v1` routes and `backend/apps` owners
+> refer to the retired PostgreSQL backend. Map UI work to Samvad's Swagger and
+> controllers instead; see [API source of truth](./api-source-of-truth.md).
+
 Date: 2026-08-21
 
 Source manifest:

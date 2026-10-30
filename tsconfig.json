@@ -1,15 +1,8 @@
 {
   "files": [],
   "references": [
-    { "path": "./backend/packages/api-contracts" },
-    { "path": "./backend/packages/backend-architecture" },
-    { "path": "./backend/packages/backend-runtime" },
     { "path": "./packages/design-tokens" },
-    { "path": "./backend/packages/domain" },
     { "path": "./packages/test-utils" },
-    { "path": "./backend/apps/api" },
-    { "path": "./apps/admin" },
-    { "path": "./apps/mobile" },
-    { "path": "./backend/apps/worker" }
+    { "path": "./apps/mobile" }
   ]
 }

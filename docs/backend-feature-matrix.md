@@ -1,5 +1,9 @@
 # Backend Feature Matrix
 
+> **Historical matrix.** It measures the retired PostgreSQL `/v1` design, not
+> Samvad implementation readiness. Use [API source of truth](./api-source-of-truth.md)
+> and the Samvad Swagger document for active integration planning.
+
 Date: 2026-08-21
 
 Status values:

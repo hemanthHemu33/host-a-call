@@ -1,5 +1,9 @@
 # API Migration Notes
 
+> **Superseded migration notes.** These notes describe an abandoned migration
+> to the root PostgreSQL `/v1` contract. The active migration is to Samvad;
+> start with [API source of truth](./api-source-of-truth.md).
+
 Date: 2026-08-21
 
 ## API version 1.0.0
