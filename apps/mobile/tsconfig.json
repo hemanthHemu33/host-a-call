@@ -18,6 +18,7 @@
     "src/samvad/**/*.tsx",
     "src/samvad-app/**/*.ts",
     "src/samvad-app/**/*.tsx",
+    "src/features/auth/firebase-phone-auth.ts",
     "src/platform/secure-storage.ts",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",

@@ -2,6 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createSamvadApi, SamvadApiError } from './api';
 
+const device = {
+  deviceFingerprint: 'install-fingerprint-1234',
+  deviceName: 'Connecto test phone',
+  platform: 'android' as const,
+};
+
 describe('Samvad API client', () => {
   it('exchanges a Firebase token at the canonical Samvad endpoint', async () => {
     const fetchMock = vi.fn(() =>
@@ -31,6 +37,7 @@ describe('Samvad API client', () => {
     const session = await api.verifyFirebasePhone(
       '+919999999999',
       'firebase-id-token',
+      device,
     );
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -39,6 +46,7 @@ describe('Samvad API client', () => {
         body: JSON.stringify({
           idToken: 'firebase-id-token',
           phoneNumber: '+919999999999',
+          ...device,
         }),
         method: 'POST',
       }),
@@ -59,8 +67,36 @@ describe('Samvad API client', () => {
     );
 
     await expect(
-      api.verifyFirebasePhone('+919999999999', 'bad-token'),
-    ).rejects.toEqual(new SamvadApiError('idToken must be valid', 401));
+      api.verifyFirebasePhone('+919999999999', 'bad-token', device),
+    ).rejects.toMatchObject({
+      code: null,
+      message: 'idToken must be valid',
+      status: 401,
+    });
+  });
+
+  it('preserves stable rate-limit metadata from the backend', async () => {
+    const api = createSamvadApi(
+      'https://samvad.example/api/v1',
+      vi.fn(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              code: 'OTP_RESEND_LIMIT_REACHED',
+              message: 'Try again later.',
+              retryAfterSeconds: 120,
+            }),
+            { status: 429 },
+          ),
+        ),
+      ),
+    );
+
+    await expect(api.requestOtp('+919999999999')).rejects.toMatchObject({
+      code: 'OTP_RESEND_LIMIT_REACHED',
+      retryAfterSeconds: 120,
+      status: 429,
+    });
   });
 
   it('rejects a successful HTTP response with an invalid auth payload', async () => {
@@ -145,11 +181,13 @@ describe('Samvad API client', () => {
     const provisional = await api.verifyFirebasePhone(
       '+919999999999',
       'firebase-id-token',
+      device,
     );
-    const registered = await api.registerHost(
-      provisional.tokens.accessToken,
-      'Ananya',
-    );
+    const registered = await api.registerHost(provisional.tokens.accessToken, {
+      dateOfBirth: '1995-04-21',
+      displayName: 'Ananya',
+      gender: 'FEMALE',
+    });
     const initialKyc = await api.getKycStatus(registered.tokens.accessToken);
     const initiation = await api.initiateKyc(registered.tokens.accessToken);
     await api.simulateKyc(registered.tokens.accessToken);

@@ -3,12 +3,13 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-config.cacheStores =
-  process.env.CONNECTO_METRO_FILE_CACHE === '1'
-    ? ({ FileStore }) => [
-        new FileStore({ root: path.join(__dirname, '.metro-cache') }),
-      ]
-    : [];
+if (process.env.CONNECTO_METRO_FILE_CACHE === '0') {
+  config.cacheStores = [];
+} else if (process.env.CONNECTO_METRO_FILE_CACHE === '1') {
+  config.cacheStores = ({ FileStore }) => [
+    new FileStore({ root: path.join(__dirname, '.metro-cache') }),
+  ];
+}
 
 const getDefaultTransformOptions = config.transformer.getTransformOptions;
 config.transformer.getTransformOptions = async (...args) => {

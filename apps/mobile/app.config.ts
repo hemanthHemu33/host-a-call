@@ -81,6 +81,10 @@ const config: ExpoConfig = {
     ['expo-router', { root: './src/samvad-app' }],
     'expo-dev-client',
     ...firebasePlugins,
+    [
+      './plugins/with-mock-firebase-autolinking',
+      { excludeFirebase: runtimeConfig.mockMode },
+    ],
     'expo-status-bar',
     'expo-font',
     [

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { samvadApi, SamvadApiError } from './api';
+import { useSamvadAuthStore } from './auth-state';
 import {
   clearSamvadTokens,
   loadSamvadTokens,
@@ -11,6 +12,7 @@ describe('Samvad session renewal', () => {
   afterEach(async () => {
     vi.restoreAllMocks();
     await clearSamvadTokens();
+    useSamvadAuthStore.setState({ accountState: null, session: null });
   });
 
   it('rotates stored tokens and retries one unauthorized request', async () => {
@@ -71,5 +73,36 @@ describe('Samvad session renewal', () => {
       ),
     ).rejects.toEqual(new SamvadApiError('Sign in again', 401));
     await expect(loadSamvadTokens()).resolves.toBeNull();
+  });
+
+  it('does not refresh a blocked account and exposes its machine-readable state', async () => {
+    const tokens = {
+      accessToken: 'blocked-access',
+      refreshToken: 'blocked-refresh',
+      tokenType: 'Bearer' as const,
+    };
+    const accountState = {
+      reason: 'TRUST_AND_SAFETY_REVIEW',
+      status: 'SUSPENDED' as const,
+      statusChangedAt: '2026-11-01T10:00:00.000Z',
+    };
+    const refresh = vi.spyOn(samvadApi, 'refresh');
+
+    await expect(
+      withSamvadTokenRefresh(tokens, () =>
+        Promise.reject(
+          new SamvadApiError(
+            'This account is suspended.',
+            401,
+            'AUTH_ACCOUNT_SUSPENDED',
+            null,
+            accountState,
+          ),
+        ),
+      ),
+    ).rejects.toMatchObject({ code: 'AUTH_ACCOUNT_SUSPENDED' });
+
+    expect(refresh).not.toHaveBeenCalled();
+    expect(useSamvadAuthStore.getState().accountState).toEqual(accountState);
   });
 });

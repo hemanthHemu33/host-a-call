@@ -1,6 +1,12 @@
 import { secureStorage } from '@/platform/secure-storage';
 
-import { isUnauthorized, samvadApi, type SamvadTokens } from './api';
+import { useSamvadAuthStore } from './auth-state';
+import {
+  isAccountStateError,
+  isUnauthorized,
+  samvadApi,
+  type SamvadTokens,
+} from './api';
 
 const storageKey = 'connecto.samvad.tokens';
 let cachedTokens: SamvadTokens | null = null;
@@ -63,6 +69,14 @@ export const withSamvadTokenRefresh = async <T>(
   try {
     return { result: await request(tokens.accessToken), tokens };
   } catch (caught: unknown) {
+    if (isAccountStateError(caught)) {
+      await clearSamvadTokens();
+      useSamvadAuthStore.setState({
+        accountState: caught.accountState,
+        session: null,
+      });
+      throw caught;
+    }
     if (!isUnauthorized(caught)) {
       throw caught;
     }
@@ -72,6 +86,12 @@ export const withSamvadTokenRefresh = async <T>(
     try {
       refreshedTokens = await samvadApi.refresh(tokens.refreshToken);
     } catch (refreshError: unknown) {
+      if (isAccountStateError(refreshError)) {
+        useSamvadAuthStore.setState({
+          accountState: refreshError.accountState,
+          session: null,
+        });
+      }
       if (isUnauthorized(refreshError)) {
         await clearSamvadTokens();
       }

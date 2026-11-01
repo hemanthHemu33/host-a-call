@@ -32,10 +32,18 @@ Mobile development build:
 pnpm dev:mobile
 ```
 
-Native mobile runs:
+Use this after the Android development build is already installed. Metro uses
+port 8081; do not start a second Metro server for the same app.
+
+Build, install, and start Android (this also starts Metro):
 
 ```sh
 pnpm --filter @connecto/mobile dev:android
+```
+
+Native iOS run:
+
+```sh
 pnpm --filter @connecto/mobile dev:ios
 ```
 

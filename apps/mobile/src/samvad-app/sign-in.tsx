@@ -2,14 +2,23 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 
 import { normalizeIndianPhoneNumber } from '@/samvad/auth-flow';
+import { samvadApi } from '@/samvad/api';
 import { useSamvadAuthStore } from '@/samvad/auth-state';
 import { requestFirebasePhoneOtp } from '@/samvad/firebase-phone';
 
-import { Body, Input, Notice, PrimaryButton, SamvadScreen, Title } from './ui';
+import {
+  Body,
+  Input,
+  Notice,
+  PrimaryButton,
+  SamvadScreen,
+  Title,
+} from '@/samvad/ui';
 
 export default function SignInScreen() {
   const router = useRouter();
   const setPhoneNumber = useSamvadAuthStore((state) => state.setPhoneNumber);
+  const setOtpChallenge = useSamvadAuthStore((state) => state.setOtpChallenge);
   const [mobileNumber, setMobileNumber] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,8 +35,16 @@ export default function SignInScreen() {
     setError(null);
 
     try {
+      const reservation = await samvadApi.requestOtp(phoneNumber);
       await requestFirebasePhoneOtp(phoneNumber);
       setPhoneNumber(phoneNumber);
+      setOtpChallenge({
+        ...reservation,
+        invalidAttempts: 0,
+        phoneNumber,
+        resendCount: 0,
+        sentAtMs: Date.now(),
+      });
       router.push('/otp');
     } catch (caught: unknown) {
       setError(
@@ -60,9 +77,7 @@ export default function SignInScreen() {
       <PrimaryButton loading={loading} onPress={() => void sendCode()}>
         Send verification code
       </PrimaryButton>
-      <Notice>
-        By continuing, you confirm that you are at least 18 years old.
-      </Notice>
+      <Notice>SMS delivery is handled securely by Firebase Phone Auth.</Notice>
     </SamvadScreen>
   );
 }

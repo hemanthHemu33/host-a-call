@@ -1,13 +1,16 @@
-import {
-  getAuth,
-  signInWithPhoneNumber,
-  signOut,
-} from '@react-native-firebase/auth';
+type FirebasePhoneConfirmation = {
+  confirm: (code: string) => Promise<{
+    user: {
+      getIdToken: (forceRefresh?: boolean) => Promise<string>;
+    };
+  }>;
+};
 
-let confirmation: Awaited<ReturnType<typeof signInWithPhoneNumber>> | null =
-  null;
+let confirmation: FirebasePhoneConfirmation | null = null;
 
 export const requestFirebasePhoneOtp = async (phoneNumber: string) => {
+  const { getAuth, signInWithPhoneNumber } =
+    await import('@react-native-firebase/auth');
   confirmation = await signInWithPhoneNumber(getAuth(), phoneNumber);
 };
 
@@ -23,5 +26,6 @@ export const confirmFirebasePhoneOtp = async (code: string) => {
 
 export const clearFirebasePhoneSession = async () => {
   confirmation = null;
+  const { getAuth, signOut } = await import('@react-native-firebase/auth');
   await signOut(getAuth());
 };

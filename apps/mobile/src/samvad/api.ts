@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { mobileRuntimeConfig } from './runtime';
 
 const samvadRoleSchema = z.enum(['CALLER', 'HOST']);
+const accountStateSchema = z.object({
+  reason: z.string().nullable(),
+  status: z.enum(['ACTIVE', 'SUSPENDED', 'BANNED', 'DELETION_PENDING']),
+  statusChangedAt: z.iso.datetime().nullable(),
+});
 const samvadTokensSchema = z.object({
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
@@ -14,6 +19,7 @@ const samvadUserSchema = z.object({
   isProfileComplete: z.boolean(),
   phoneNumber: z.string().min(1),
   role: samvadRoleSchema,
+  accountState: accountStateSchema.optional(),
 });
 const samvadProfileSchema = z.record(z.string(), z.unknown()).nullable();
 const samvadSessionSchema = z.object({
@@ -44,6 +50,37 @@ const samvadKycInitiationSchema = z.object({
   isSandbox: z.boolean(),
   state: z.string().min(1),
 });
+const otpReservationSchema = z.object({
+  provider: z.literal('firebase-client'),
+  remainingResends: z.number().int().min(0).max(3),
+  requestId: z.string().min(1),
+  resendAfterSeconds: z.number().int().positive(),
+  success: z.literal(true),
+});
+const appConfigSchema = z.object({
+  maintenance: z.object({
+    active: z.boolean(),
+    message: z.string().min(1),
+  }),
+  update: z.object({
+    minimumVersion: z.string().min(1),
+    required: z.boolean(),
+    url: z.string(),
+  }),
+});
+const authSessionSummarySchema = z.object({
+  createdAt: z.iso.datetime(),
+  current: z.boolean(),
+  deviceName: z.string().min(1),
+  id: z.string().min(1),
+  lastSeenAt: z.iso.datetime(),
+  platform: z.string().min(1),
+});
+const accountStatusResponseSchema = z.object({
+  accountState: accountStateSchema,
+  deletionRequestedAt: z.iso.datetime().nullable(),
+  deletionScheduledFor: z.iso.datetime().nullable(),
+});
 
 export type SamvadRole = z.infer<typeof samvadRoleSchema>;
 
@@ -56,6 +93,18 @@ export type SamvadSession = z.infer<typeof samvadSessionSchema>;
 export type SamvadKycStatus = z.infer<typeof samvadKycStatusSchema>;
 
 export type SamvadKycInitiation = z.infer<typeof samvadKycInitiationSchema>;
+export type SamvadAccountState = z.infer<typeof accountStateSchema>;
+export type SamvadAppConfig = z.infer<typeof appConfigSchema>;
+export type SamvadAuthSessionSummary = z.infer<typeof authSessionSummarySchema>;
+export type SamvadAccountStatus = z.infer<typeof accountStatusResponseSchema>;
+export type SamvadOtpReservation = z.infer<typeof otpReservationSchema>;
+
+export type SamvadDeviceContext = {
+  deviceFingerprint: string;
+  deviceName: string;
+  fcmToken?: string;
+  platform: 'android' | 'ios' | 'web' | 'unknown';
+};
 
 type SamvadRegistrationResponse = z.infer<
   typeof samvadRegistrationResponseSchema
@@ -65,6 +114,10 @@ export class SamvadApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly code: string | null = null,
+    readonly retryAfterSeconds: number | null = null,
+    readonly accountState: SamvadAccountState | null = null,
+    readonly details: unknown = null,
   ) {
     super(message);
     this.name = 'SamvadApiError';
@@ -105,12 +158,37 @@ const errorMessage = (payload: unknown) => {
   return 'Samvad could not complete that request.';
 };
 
+const errorDetails = (payload: unknown) => {
+  if (typeof payload !== 'object' || payload === null) {
+    return {
+      accountState: null,
+      code: null,
+      retryAfterSeconds: null,
+    };
+  }
+  const candidate = payload as Record<string, unknown>;
+  const parsedState = accountStateSchema.safeParse(candidate.accountState);
+  return {
+    accountState: parsedState.success ? parsedState.data : null,
+    code: typeof candidate.code === 'string' ? candidate.code : null,
+    retryAfterSeconds:
+      typeof candidate.retryAfterSeconds === 'number'
+        ? candidate.retryAfterSeconds
+        : null,
+  };
+};
+
 const completedRegistrationSession = (
   response: SamvadRegistrationResponse,
 ): SamvadSession => ({
   ...response,
   user: {
     ...response.user,
+    accountState: {
+      reason: null,
+      status: 'ACTIVE',
+      statusChangedAt: null,
+    },
     isNewUser: false,
     isProfileComplete: true,
   },
@@ -126,7 +204,7 @@ export const createSamvadApi = (
   const request = async <T>(input: {
     accessToken?: string;
     body?: Record<string, unknown>;
-    method: 'GET' | 'POST';
+    method: 'DELETE' | 'GET' | 'PATCH' | 'POST';
     path: string;
     schema: z.ZodType<T>;
   }): Promise<T> => {
@@ -146,7 +224,15 @@ export const createSamvadApi = (
     const payload = await readPayload(response);
 
     if (!response.ok) {
-      throw new SamvadApiError(errorMessage(payload), response.status);
+      const details = errorDetails(payload);
+      throw new SamvadApiError(
+        errorMessage(payload),
+        response.status,
+        details.code,
+        details.retryAfterSeconds,
+        details.accountState,
+        payload,
+      );
     }
 
     const parsed = input.schema.safeParse(payload);
@@ -159,6 +245,19 @@ export const createSamvadApi = (
   };
 
   return {
+    getAppConfig: (platform: string, version: string) =>
+      request<SamvadAppConfig>({
+        method: 'GET',
+        path: `auth/app-config?platform=${encodeURIComponent(platform)}&version=${encodeURIComponent(version)}`,
+        schema: appConfigSchema,
+      }),
+    getAccountStatus: (accessToken: string) =>
+      request<SamvadAccountStatus>({
+        accessToken,
+        method: 'GET',
+        path: 'auth/account-status',
+        schema: accountStatusResponseSchema,
+      }),
     getKycStatus: (accessToken: string) =>
       request<SamvadKycStatus>({
         accessToken,
@@ -187,6 +286,46 @@ export const createSamvadApi = (
         path: 'auth/logout',
         schema: z.object({ success: z.boolean() }),
       }),
+    logoutAll: (accessToken: string) =>
+      request<{ success: boolean }>({
+        accessToken,
+        method: 'POST',
+        path: 'auth/logout-all',
+        schema: z.object({ success: z.boolean() }),
+      }),
+    listSessions: (accessToken: string) =>
+      request<{ sessions: SamvadAuthSessionSummary[] }>({
+        accessToken,
+        method: 'GET',
+        path: 'auth/sessions',
+        schema: z.object({ sessions: z.array(authSessionSummarySchema) }),
+      }),
+    revokeSession: (accessToken: string, sessionId: string) =>
+      request<{ currentSessionRevoked: boolean; success: boolean }>({
+        accessToken,
+        method: 'DELETE',
+        path: `auth/sessions/${encodeURIComponent(sessionId)}`,
+        schema: z.object({
+          currentSessionRevoked: z.boolean(),
+          success: z.boolean(),
+        }),
+      }),
+    registerDeviceToken: (accessToken: string, token: string) =>
+      request<{ registered: boolean }>({
+        accessToken,
+        body: { token },
+        method: 'POST',
+        path: 'auth/device-token',
+        schema: z.object({ registered: z.boolean() }),
+      }),
+    unregisterDeviceToken: (accessToken: string, token: string) =>
+      request<{ unregistered: boolean }>({
+        accessToken,
+        body: { token },
+        method: 'DELETE',
+        path: 'auth/device-token',
+        schema: z.object({ unregistered: z.boolean() }),
+      }),
     refresh: (refreshToken: string) =>
       request<SamvadTokens>({
         body: { refreshToken },
@@ -194,15 +333,20 @@ export const createSamvadApi = (
         path: 'auth/refresh-token',
         schema: samvadTokensSchema,
       }),
-    registerCaller: async (accessToken: string, displayName: string) =>
+    registerCaller: async (
+      accessToken: string,
+      input: {
+        dateOfBirth: string;
+        displayName: string;
+        gender: 'FEMALE' | 'MALE';
+      },
+    ) =>
       completedRegistrationSession(
         await request<SamvadRegistrationResponse>({
           accessToken,
           body: {
-            ageConfirmed: true,
             conversationIntents: ['Casual Conversation'],
-            displayName,
-            gender: 'MALE',
+            ...input,
             preferredLanguages: ['English', 'Hindi'],
           },
           method: 'POST',
@@ -210,15 +354,20 @@ export const createSamvadApi = (
           schema: samvadRegistrationResponseSchema,
         }),
       ),
-    registerHost: async (accessToken: string, displayName: string) =>
+    registerHost: async (
+      accessToken: string,
+      input: {
+        dateOfBirth: string;
+        displayName: string;
+        gender: 'FEMALE' | 'MALE';
+      },
+    ) =>
       completedRegistrationSession(
         await request<SamvadRegistrationResponse>({
           accessToken,
           body: {
-            ageConfirmed: true,
             categories: ['Casual Conversation'],
-            displayName,
-            gender: 'FEMALE',
+            ...input,
             languages: ['English', 'Hindi'],
           },
           method: 'POST',
@@ -234,12 +383,39 @@ export const createSamvadApi = (
         path: 'verification/digilocker/simulate',
         schema: z.unknown(),
       }),
-    verifyFirebasePhone: (phoneNumber: string, idToken: string) =>
+    requestOtp: (phoneNumber: string) =>
+      request<SamvadOtpReservation>({
+        body: { phoneNumber },
+        method: 'POST',
+        path: 'auth/otp/send',
+        schema: otpReservationSchema,
+      }),
+    verifyFirebasePhone: (
+      phoneNumber: string,
+      idToken: string,
+      device: SamvadDeviceContext,
+    ) =>
       request<SamvadSession>({
-        body: { idToken, phoneNumber },
+        body: { idToken, phoneNumber, ...device },
         method: 'POST',
         path: 'auth/otp/verify',
         schema: samvadSessionSchema,
+      }),
+    updateProfile: (accessToken: string, profile: Record<string, unknown>) =>
+      request<Omit<SamvadSession, 'tokens'>>({
+        accessToken,
+        body: profile,
+        method: 'PATCH',
+        path: 'auth/me',
+        schema: samvadProfileResponseSchema,
+      }),
+    deleteAccount: (accessToken: string) =>
+      request<SamvadAccountStatus>({
+        accessToken,
+        body: { confirmation: 'DELETE' },
+        method: 'DELETE',
+        path: 'auth/me',
+        schema: accountStatusResponseSchema,
       }),
   };
 };
@@ -248,3 +424,8 @@ export const samvadApi = createSamvadApi();
 
 export const isUnauthorized = (error: unknown) =>
   error instanceof SamvadApiError && error.status === 401;
+
+export const isAccountStateError = (
+  error: unknown,
+): error is SamvadApiError & { accountState: SamvadAccountState } =>
+  error instanceof SamvadApiError && error.accountState !== null;

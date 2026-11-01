@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 
-import { isUnauthorized, samvadApi } from '@/samvad/api';
+import { isUnauthorized, SamvadApiError, samvadApi } from '@/samvad/api';
 import { useSamvadAuthStore } from '@/samvad/auth-state';
 import { clearFirebasePhoneSession } from '@/samvad/firebase-phone';
+import { requestAndRegisterNotificationToken } from '@/samvad/device';
 import { clearSamvadTokens, withSamvadTokenRefresh } from '@/samvad/session';
 
 import {
@@ -13,12 +14,13 @@ import {
   SamvadScreen,
   SecondaryButton,
   Title,
-} from './ui';
+} from '@/samvad/ui';
 
 export default function AccountScreen() {
   const router = useRouter();
   const session = useSamvadAuthStore((state) => state.session);
   const setSession = useSamvadAuthStore((state) => state.setSession);
+  const setAccountState = useSamvadAuthStore((state) => state.setAccountState);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,6 +45,12 @@ export default function AccountScreen() {
       );
       setSession({ ...profile, tokens });
     } catch (caught: unknown) {
+      if (caught instanceof SamvadApiError && caught.accountState !== null) {
+        setSession(null);
+        setAccountState(caught.accountState);
+        router.replace('/account-status');
+        return;
+      }
       if (isUnauthorized(caught)) {
         setSession(null);
         router.replace('/sign-in');
@@ -53,6 +61,27 @@ export default function AccountScreen() {
         caught instanceof Error
           ? caught.message
           : 'Could not refresh your account.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const enableNotifications = async () => {
+    if (session === null) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const { tokens } = await withSamvadTokenRefresh(
+        session.tokens,
+        requestAndRegisterNotificationToken,
+      );
+      if (tokens !== session.tokens) setSession({ ...session, tokens });
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : 'Could not register notifications.',
       );
     } finally {
       setLoading(false);
@@ -82,6 +111,10 @@ export default function AccountScreen() {
   if (session === null) {
     return null;
   }
+  const displayName =
+    typeof session.profile?.displayName === 'string'
+      ? session.profile.displayName
+      : null;
 
   return (
     <SamvadScreen>
@@ -90,6 +123,7 @@ export default function AccountScreen() {
       <Notice>
         Samvad role: {session.user.role === 'HOST' ? 'Host' : 'Caller'}
       </Notice>
+      {displayName === null ? null : <Notice>Profile: {displayName}</Notice>}
       {session.user.role === 'HOST' ? (
         <PrimaryButton
           onPress={() => {
@@ -100,11 +134,38 @@ export default function AccountScreen() {
         </PrimaryButton>
       ) : null}
       {error === null ? null : <Notice error>{error}</Notice>}
+      <PrimaryButton
+        onPress={() => {
+          router.push('/edit-profile');
+        }}
+      >
+        Edit profile
+      </PrimaryButton>
+      <SecondaryButton
+        disabled={loading}
+        onPress={() => void enableNotifications()}
+      >
+        Enable notifications on this device
+      </SecondaryButton>
+      <SecondaryButton
+        onPress={() => {
+          router.push('/sessions');
+        }}
+      >
+        Devices and sessions
+      </SecondaryButton>
       <SecondaryButton disabled={loading} onPress={() => void refresh()}>
         Refresh account
       </SecondaryButton>
       <SecondaryButton disabled={loading} onPress={() => void signOut()}>
         Sign out
+      </SecondaryButton>
+      <SecondaryButton
+        onPress={() => {
+          router.push('/delete-account');
+        }}
+      >
+        Delete account
       </SecondaryButton>
     </SamvadScreen>
   );

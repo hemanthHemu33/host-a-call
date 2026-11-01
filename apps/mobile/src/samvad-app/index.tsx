@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-import { samvadApi } from '@/samvad/api';
+import { isUnauthorized, SamvadApiError, samvadApi } from '@/samvad/api';
 import { routeForSamvadSession } from '@/samvad/auth-flow';
 import { useSamvadAuthStore } from '@/samvad/auth-state';
 import {
@@ -10,17 +12,49 @@ import {
   withSamvadTokenRefresh,
 } from '@/samvad/session';
 
-import { Body, Notice, SamvadScreen, Title } from './ui';
+import { Body, Notice, SamvadScreen, Title } from '@/samvad/ui';
 
 export default function BootstrapScreen() {
   const router = useRouter();
   const setSession = useSamvadAuthStore((state) => state.setSession);
+  const setAccountState = useSamvadAuthStore((state) => state.setAccountState);
+  const setMaintenanceMessage = useSamvadAuthStore(
+    (state) => state.setMaintenanceMessage,
+  );
+  const setUpdateUrl = useSamvadAuthStore((state) => state.setUpdateUrl);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
     const restore = async () => {
+      try {
+        const appConfig = await samvadApi.getAppConfig(
+          Platform.OS,
+          Constants.expoConfig?.version ?? '0.0.0',
+        );
+        if (!active) return;
+        if (appConfig.maintenance.active) {
+          setMaintenanceMessage(appConfig.maintenance.message);
+          router.replace('/maintenance');
+          return;
+        }
+        if (appConfig.update.required) {
+          setUpdateUrl(appConfig.update.url);
+          router.replace('/mandatory-update');
+          return;
+        }
+      } catch (caught: unknown) {
+        if (active) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : 'Could not check app availability.',
+          );
+        }
+        return;
+      }
+
       const storedTokens = await loadSamvadTokens();
 
       if (storedTokens === null) {
@@ -41,7 +75,19 @@ export default function BootstrapScreen() {
           router.replace(routeForSamvadSession(session));
         }
       } catch (caught: unknown) {
-        await clearSamvadTokens();
+        if (caught instanceof SamvadApiError && caught.accountState !== null) {
+          await clearSamvadTokens();
+          if (active) {
+            setAccountState(caught.accountState);
+            router.replace('/account-status');
+          }
+          return;
+        }
+        if (isUnauthorized(caught)) {
+          await clearSamvadTokens();
+          if (active) router.replace('/sign-in');
+          return;
+        }
 
         if (active) {
           setError(
@@ -57,7 +103,13 @@ export default function BootstrapScreen() {
     return () => {
       active = false;
     };
-  }, [router, setSession]);
+  }, [
+    router,
+    setAccountState,
+    setMaintenanceMessage,
+    setSession,
+    setUpdateUrl,
+  ]);
 
   return (
     <SamvadScreen>

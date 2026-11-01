@@ -14,7 +14,7 @@ import {
   SamvadScreen,
   SecondaryButton,
   Title,
-} from './ui';
+} from '@/samvad/ui';
 
 export default function KycScreen() {
   const router = useRouter();

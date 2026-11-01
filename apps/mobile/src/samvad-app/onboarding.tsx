@@ -13,24 +13,28 @@ import {
   SamvadScreen,
   SecondaryButton,
   Title,
-} from './ui';
+} from '@/samvad/ui';
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const session = useSamvadAuthStore((state) => state.session);
+  const dateOfBirth = useSamvadAuthStore((state) => state.dateOfBirth);
   const setSession = useSamvadAuthStore((state) => state.setSession);
   const [displayName, setDisplayName] = useState('');
+  const [gender, setGender] = useState<'FEMALE' | 'MALE' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<'caller' | 'host' | null>(null);
 
   useEffect(() => {
     if (session === null) {
       router.replace('/sign-in');
+    } else if (dateOfBirth === null) {
+      router.replace('/age-confirmation');
     }
-  }, [router, session]);
+  }, [dateOfBirth, router, session]);
 
   const completeProfile = async (role: 'caller' | 'host') => {
-    if (session === null) {
+    if (session === null || dateOfBirth === null) {
       return;
     }
 
@@ -38,6 +42,10 @@ export default function OnboardingScreen() {
 
     if (name.length < 2) {
       setError('Enter the name you want to show on Connecto.');
+      return;
+    }
+    if (gender === null) {
+      setError('Select the gender used for role eligibility.');
       return;
     }
 
@@ -49,8 +57,16 @@ export default function OnboardingScreen() {
         session.tokens,
         (accessToken) =>
           role === 'host'
-            ? samvadApi.registerHost(accessToken, name)
-            : samvadApi.registerCaller(accessToken, name),
+            ? samvadApi.registerHost(accessToken, {
+                dateOfBirth,
+                displayName: name,
+                gender,
+              })
+            : samvadApi.registerCaller(accessToken, {
+                dateOfBirth,
+                displayName: name,
+                gender,
+              }),
       );
       await saveSamvadTokens(nextSession.tokens);
       setSession(nextSession);
@@ -87,6 +103,21 @@ export default function OnboardingScreen() {
         placeholder="Your display name"
         value={displayName}
       />
+      <Body>Select your gender</Body>
+      <SecondaryButton
+        onPress={() => {
+          setGender('MALE');
+        }}
+      >
+        {gender === 'MALE' ? '✓ Man selected' : 'Man'}
+      </SecondaryButton>
+      <SecondaryButton
+        onPress={() => {
+          setGender('FEMALE');
+        }}
+      >
+        {gender === 'FEMALE' ? '✓ Woman selected' : 'Woman'}
+      </SecondaryButton>
       {error === null ? null : <Notice error>{error}</Notice>}
       <PrimaryButton
         loading={submitting === 'caller'}
@@ -98,8 +129,8 @@ export default function OnboardingScreen() {
         {submitting === 'host' ? 'Creating Host profile…' : 'Apply as Host'}
       </SecondaryButton>
       <Notice>
-        Samvad currently accepts male callers and female hosts. Host
-        applications continue to DigiLocker verification after this step.
+        Role eligibility is enforced by server configuration. Host applications
+        continue to DigiLocker verification after this step.
       </Notice>
     </SamvadScreen>
   );

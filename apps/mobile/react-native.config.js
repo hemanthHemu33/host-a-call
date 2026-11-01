@@ -48,6 +48,13 @@ function getAndroidSourceDir(packageName, fallbackAndroidSourceDir) {
     return null;
   }
 
+  const fallbackRoot = path.parse(fallbackAndroidSourceDir).root;
+  const packageRootDrive = path.parse(packageRoot).root;
+  const fallbackAndroidSourceDirOnPackageDrive = path.join(
+    packageRootDrive,
+    path.relative(fallbackRoot, fallbackAndroidSourceDir),
+  );
+
   const directAndroidSourceDir = getDirectAndroidSourceDir(packageRoot);
   if (
     directAndroidSourceDir &&
@@ -56,8 +63,8 @@ function getAndroidSourceDir(packageName, fallbackAndroidSourceDir) {
     return directAndroidSourceDir;
   }
 
-  if (fs.existsSync(fallbackAndroidSourceDir)) {
-    return path.relative(packageRoot, fallbackAndroidSourceDir);
+  if (fs.existsSync(fallbackAndroidSourceDirOnPackageDrive)) {
+    return path.relative(packageRoot, fallbackAndroidSourceDirOnPackageDrive);
   }
 
   return directAndroidSourceDir;
